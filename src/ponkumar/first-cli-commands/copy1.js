@@ -5,7 +5,7 @@ const WITH_FOLDER = "-wf";
 const WITHOUT_FOLDER = "-Wf";
 const ONLY_FILE = "-of";
 var argument = process.argv.slice(2);
-let commandName = "c";
+let commandName = "copy2";
 let option  = null;
 function optionFinder(arg) {
   // if (arg[0].indexOf("-") == 0){
@@ -26,10 +26,10 @@ function typeCheck (filePath) {
   }
 }
 function copyFileToFile (fromPath,toPath) {
-  fs.copFileSync(fromPath,toPath);
+  fs.copyFileSync(fromPath,toPath);
 }
 function copyFileToFolder (dirPath,filePath) {
-  fs.copFileSync(filePath,path.join(dirPath,path.basename(filePath)));
+  fs.copyFileSync(filePath,path.join(dirPath,path.basename(filePath)));
 }
 function copyFolder(fromPath,toPath,option){
   let nextOption = null;
@@ -37,24 +37,27 @@ function copyFolder(fromPath,toPath,option){
   switch (option) {
     case WITHOUT_FOLDER:
       nextOption = (nextOption === null) ? WITH_FOLDER : nextOption;
-      nextToPath = (nextToPath === null) ? path.join(toPath,file) : nextToPath;
+      // nextToPath = (nextToPath === null) ? path.join(toPath,file) : nextToPath;
     case ONLY_FILE:
       nextOption = (nextOption === null) ? ONLY_FILE : nextOption;
       nextToPath = (nextToPath === null) ? toPath : nextToPath;
-      let fileArray = fs.readdir(fromPath);
+      let fileArray = fs.readdirSync(fromPath);
       fileArray.forEach( function (file)  {
         let nextFromPath = path.join(fromPath,file);
-        if (fs.lstatSync(file).isDirectory()) {
+        if (fs.lstatSync(nextFromPath).isDirectory()) {
           copyFolder(nextFromPath,nextToPath,nextOption);
         } else {
-          copyFileToFolder(nextFromPath,toPath);
+          copyFileToFolder(toPath,nextFromPath);
         }
       })
       break;
     case WITH_FOLDER:
     default:
-      fs.mkdir(path.join(toPath,path.basename(fromPath)))
-      copyFolder(fromPath,toPath,WITHOUT_FOLDER);
+      nextToPath = path.join(toPath,path.basename(fromPath));
+      if (fs.existsSync(nextToPath) == false) {
+        fs.mkdirSync(nextToPath);
+      }
+      copyFolder(fromPath,nextToPath,WITHOUT_FOLDER);
   }
 }
 if (argument.includes("--help")) {
@@ -92,17 +95,16 @@ if (argument.includes("--help")) {
                   copyFileToFolder(dirPath,filePath);
                   break;
                 case 1:
-                  copyFolder(firstFile,dirPath,option);
+                  copyFolder(filePath,dirPath,option);
                   break;
                 case -1:
                 default:
                   console.log(commandName+" : cannot stat '"+file+"': No such file or directory");
               }
-            }
-          )
+            })
           break;
         case 0:
-          if (argument.length == 2) {
+          if (argument.length == 1) {
             let firstFile = path.resolve(argument[0]);
             let firstFileType = typeCheck(firstFile);
             if (firstFileType == 0) {
@@ -117,7 +119,7 @@ if (argument.includes("--help")) {
           }
           break;
         case -1:
-          if (argument.length == 2) {
+          if (argument.length == 1) {
             let firstFile = path.resolve(argument[0]);
             let firstFileType  = typeCheck(firstFile);
             if (firstFileType == 1) {
@@ -125,6 +127,7 @@ if (argument.includes("--help")) {
                 fs.mkdirSync(dirPath);
                 copyFolder(firstFile,dirPath,option);
               } catch (e) {
+                console.log(e);
                 console.log(commandName+" : cannot create '"+dirPath+"':  directory");
               }
             }else if (firstFileType == 0) {
@@ -142,4 +145,4 @@ if (argument.includes("--help")) {
     }
   }
 
-}
+// }
