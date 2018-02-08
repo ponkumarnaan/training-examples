@@ -1,0 +1,17 @@
+{
+  "name": "cli-commands",
+  "version": "1.0.0",
+  "description": "i have study about cli commands using nodejs and npm",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin" : {
+    "m" : "./move.js",
+    "copy2" : "./copy1.js",
+    "l" : "./list.js",
+    "filehandler": "./filehandler.js"
+  },
+  "author": "Ponkumar",
+  "license": "ISC"
+}
